@@ -1,5 +1,5 @@
 class Fluent::DataCalculatorOutput < Fluent::Output
-  Fluent::Plugin.register_output('datacalculate', self)
+  Fluent::Plugin.register_output('datacalculator', self)
 
   config_param :count_interval, :time, :default => nil
   config_param :unit, :string, :default => 'minute'
