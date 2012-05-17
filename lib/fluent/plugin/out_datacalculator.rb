@@ -41,8 +41,9 @@ class Fluent::DataCalculatorOutput < Fluent::Output
     def createFunc (cnt, str)
       str.strip!
       left, right = str.split(/\s*=\s*/, 2)
-      rights = right.scan(/[a-zA-Z][\w\d_\.\$]*/).uniq
-      
+      rights = right.scan(/[a-zA-Z][\w\d_\.\$\:\@]*/).uniq.select{|x| x.index('Fluent') != 0}
+#       rights = right.scan(/[a-zA-Z][\w\d_\.\$\:\@]*/).uniq
+
       begin
         f = eval('lambda {|'+rights.join(',')+'|  '+right + '}')
       rescue SyntaxError

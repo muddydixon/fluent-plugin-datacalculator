@@ -28,6 +28,12 @@ class DataCalculatorOutputTest < Test::Unit::TestCase
         formulas sum = 10 ab
       ]
     }
+    # 式にnowが入っている
+    assert_raise(Fluent::ConfigError) {
+      d = create_driver %[
+        formulas hour = Fluent::Engine.now
+      ]
+    }
     # finalizerに必要な要素がない
     assert_raise(Fluent::ConfigError) {
       d = create_driver %[
