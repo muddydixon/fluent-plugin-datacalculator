@@ -1,0 +1,54 @@
+= fluent-plugin-datacalculator
+
+== Component
+
+=== DataCalculateOutput
+
+Simple Calculate messages and summarize the calculated results.
+
+- Summarize calculated results per min/hour/day 
+- Summarize calculated results per second (average every min/hour/day)
+- Use finalizer of summarized results (e.g. average)
+
+'input_tag_remove_prefix' option available if you want to remove tag prefix from output field names.
+
+== Configuration
+
+=== DataCounterOutput
+
+Count messages that have attribute 'referer' as 'google.com', 'yahoo.com' and 'facebook.com' from all messages matched, per minutes.
+
+    <match accesslog.**>
+      type datacalculate
+      unit minute
+      aggregate all
+      fomulas sum = amount * price, amounts = amount
+    </match>
+
+If you use finalizer, like this
+
+    <match accesslog.**>
+      type datacalculate
+      unit minute
+      aggregate all
+      fomulas sum = amount * price, amounts = amount
+      finalizer average = amounts > 0 ? 1.0 * sum / amounts : 0
+    </match>
+
+Finalizer uses the summarized output, so argv in finalizer must exist in left-hand side in fomulas.
+
+
+
+== TODO
+
+- multiple finalizer
+- patches welcome!
+
+== Thanks
+
+tagomoris's fluent-plugin-datacounter is AWESOME plugin! That's nice!
+
+== Copyright
+
+Copyright:: Copyright (c) 2012- Muddy Dixon
+License::   Apache License, Version 2.0
