@@ -16,8 +16,6 @@ Simple Calculate messages and summarize the calculated results.
 
 === DataCounterOutput
 
-Count messages that have attribute 'referer' as 'google.com', 'yahoo.com' and 'facebook.com' from all messages matched, per minutes.
-
     <match accesslog.**>
       type datacalculate
       unit minute
