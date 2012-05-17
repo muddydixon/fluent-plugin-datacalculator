@@ -14,7 +14,7 @@ Simple Calculate messages and summarize the calculated results.
 
 == Configuration
 
-=== DataCounterOutput
+=== DataCalculateOutput
 
     <match accesslog.**>
       type datacalculate
