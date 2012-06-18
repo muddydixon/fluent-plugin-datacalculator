@@ -5,6 +5,7 @@ class Fluent::DataCalculatorOutput < Fluent::Output
   config_param :count_interval, :time, :default => nil
   config_param :unit, :string, :default => 'minute'
   config_param :aggregate, :string, :default => 'tag'
+  config_param :aggregate_delimiter, :string, :default => '_$_'
   config_param :tag, :string, :default => 'datacalculate'
   config_param :input_tag_remove_prefix, :string, :default => nil
   config_param :formulas, :string
@@ -194,7 +195,7 @@ class Fluent::DataCalculatorOutput < Fluent::Output
 
       counts.keys.each do |pat|
         output = {}
-        pat_val = pat.split('_').map{|x| x.to_i }
+        pat_val = pat.split(@aggregate_delimiter).map{|x| x.to_s }
         counts[pat].each_with_index do |count, i|
           name = @_formulas[i][1]
           output[name] = count
@@ -280,7 +281,7 @@ class Fluent::DataCalculatorOutput < Fluent::Output
     cs = {}
     es.each do |time, record|
       matched = false
-      pat = @aggregate_keys.map{ |key| record[key] }.join('_')
+      pat = @aggregate_keys.map{ |key| record[key] }.join(@aggregate_delimiter)
       cs[pat] = [0] * @_formulas.length unless cs.has_key?(pat)
 
       if @_formulas.length > 0

@@ -112,6 +112,7 @@ class DataCalculatorOutputTest < Test::Unit::TestCase
     d = create_driver
     r1 = d.instance.generate_output({'test.input' => [240,120,180], 'test.input2' => [600,0,0]}, 60)[0]
 
+
     assert_equal   240, r1['input_sum']
     assert_equal   120, r1['input_amounts']
     assert_equal   180, r1['input_record']
@@ -203,6 +204,38 @@ class DataCalculatorOutputTest < Test::Unit::TestCase
     r3 = d3.instance.flush(60)
     r3.each do |r|
       pat = [r['area_id'], r['mission_id']].join(',')
+      assert_equal sums[pat], r['sum']
+      assert_equal counts[pat], r['count']
+    end
+
+    d4 = create_driver(%[
+      unit minute
+      aggregate keys area_id, mission_id
+      formulas sum = amount * price, count = 1
+      <unmatched>
+        type stdout
+      </unmatched>
+    ], 'test.input3')
+    
+    sums = {}
+    counts = {}
+    d4.run do
+      240.times do
+        area_id = 'area_'+rand(5).to_s
+        mission_id = 'mission_'+rand(5).to_s
+        amount = rand(10)
+        price = rand(5) * 100
+        pat = [area_id, mission_id].join('_$_')
+        d4.emit({'amount' => amount, 'price' => price, 'area_id' => area_id, 'mission_id' => mission_id})
+        sums[pat] = 0 unless sums.has_key?(pat)
+        counts[pat] = 0 unless counts.has_key?(pat)
+        sums[pat] += amount * price
+        counts[pat] += 1
+      end
+    end
+    r4 = d4.instance.flush(60)
+    r4.each do |r|
+      pat = [r['area_id'], r['mission_id']].join('_$_')
       assert_equal sums[pat], r['sum']
       assert_equal counts[pat], r['count']
     end
