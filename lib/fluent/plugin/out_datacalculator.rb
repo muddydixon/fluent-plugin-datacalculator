@@ -70,8 +70,12 @@ class Fluent::DataCalculatorOutput < Fluent::Output
     def createFunc (cnt, str)
       str.strip!
       left, right = str.split(/\s*=\s*/, 2)
-      # Fluent moduleだけはOK
-      rights = right.scan(/[a-zA-Z][\w\d_\.\$\:\@]*/).uniq.select{|x| x.index('Fluent') != 0}
+
+      rights = right.gsub(/([^\\]|^)\".+[^\\]\"/, '')
+      rights = rights.scan(/[a-zA-Z][\w\d_\.\$\:\@]*/).uniq.select{|x| not x.match(/^[A-Z]/)}
+      rights = rights.map do|var|
+        var.sub(/[\.:].+$/, '')
+      end
 
       begin
         f = eval('lambda {|'+rights.join(',')+'|  '+right + '}')
@@ -94,7 +98,11 @@ class Fluent::DataCalculatorOutput < Fluent::Output
         end
         _argv.push obj[arg]
       }
-      formula.call(*_argv)
+      begin
+        formula.call(*_argv)
+      rescue ArgumentError
+        raise Fluent::RuntimeError, "argument error " + _argv + " are adapted to "+ formula
+      end
     end
 
     @_formulas = []
