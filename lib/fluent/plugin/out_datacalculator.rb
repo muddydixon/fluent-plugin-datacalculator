@@ -24,15 +24,27 @@ class Fluent::DataCalculatorOutput < Fluent::Output
     if @count_interval
       @tick = @count_interval.to_i
     else
-      @tick = case @unit
-              when 'minute' then 60
-              when 'hour' then 3600
-              when 'day' then 86400
-              else 
-                raise RuntimeError, "@unit must be one of minute/hour/day"
-              end
+      if @unit.index('sec') == 0
+        @tick = 1
+      elsif @unit.index('sec') != nil
+        @tick = @unit[0, @unit.index('sec')].to_i
+      elsif @unit.index('minute') == 0
+        @tick = 60
+      elsif @unit.index('minute') != nil
+        @tick = @unit[0, @unit.index('minute')].to_i * 60
+      elsif @unit.index('hour') == 0
+        @tick = 3600
+      elsif @unit.index('hour') != nil
+        @tick = @unit[0, @unit.index('hour')].to_i * 3600
+      elsif @unit.index('day') == 0
+        @tick = 86400
+      elsif @unit.index('day') != nil
+        @tick = @unit[0, @unit.index('day')].to_i * 86400
+      else
+        raise RuntimeError, "@unit must be one of Xsec[onds]/Xminute[s]/Xhour[s]/Xday[s]"
+      end
     end
-    
+
 
     conf.elements.each do |element|
       element.keys.each do |k|
