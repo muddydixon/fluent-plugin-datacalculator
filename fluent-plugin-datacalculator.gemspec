@@ -3,7 +3,7 @@ $:.push File.expand_path("../lib", __FILE__)
 
 Gem::Specification.new do |s|
   s.name        = "fluent-plugin-datacalculator"
-  s.version     = "0.0.3"
+  s.version     = "0.0.4"
   s.authors     = ["Muddy Dixon"]
   s.email       = ["muddydixon@gmail.com"]
   s.homepage    = "https://github.com/muddydixon/fluent-plugin-datacalculator"

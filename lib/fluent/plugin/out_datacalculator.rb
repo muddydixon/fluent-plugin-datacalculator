@@ -92,7 +92,7 @@ class Fluent::DataCalculatorOutput < Fluent::Output
         if tag != nil and tag != 'all'
           arg = tag + '_' + arg
         end
-        _argv.push obj[arg]
+        _argv.push obj[arg].to_f
       }
       formula.call(*_argv)
     end
@@ -159,7 +159,7 @@ class Fluent::DataCalculatorOutput < Fluent::Output
     if @aggregate == :all
       tag = 'all'
     end
-   
+
     @mutex.synchronize {
       @counts[tag] ||= [0] * @_formulas.length
       counts.each_with_index do |count, i|
@@ -200,7 +200,7 @@ class Fluent::DataCalculatorOutput < Fluent::Output
           name = @_formulas[i][1]
           output[name] = count
         end
-        
+
         @aggregate_keys.each_with_index do |key, i|
           output[@aggregate_keys[i]] = pat_val[i]
         end
@@ -208,10 +208,10 @@ class Fluent::DataCalculatorOutput < Fluent::Output
         if @_finalizer
           output[@_finalizer[1]] = execFunc('all', output, @_finalizer[2], @_finalizer[3])
         end
-        
+
         outputs.push(output)
       end
-      
+
       return outputs
     end
 
@@ -245,7 +245,7 @@ class Fluent::DataCalculatorOutput < Fluent::Output
     # for internal, or tests only
     @watcher = Thread.new(&method(:watch))
   end
-  
+
   def watch
     # instance variable, and public accessable, for test
     @last_checked = Fluent::Engine.now
@@ -269,7 +269,7 @@ class Fluent::DataCalculatorOutput < Fluent::Output
   end
 
   def emit (tag, es, chain)
-    
+
     if @aggregate == 'keys'
       emit_aggregate_keys(tag, es, chain)
     else
@@ -306,13 +306,12 @@ class Fluent::DataCalculatorOutput < Fluent::Output
 
   def emit_single_tag (tag, es, chain)
     c = [0] * @_formulas.length
-      
+
     es.each do |time,record|
       matched = false
       if @_formulas.length > 0
         @_formulas.each do |index, outkey, inkeys, formula|
           next unless formula and checkArgs(record, inkeys)
-
           c[index] += execFunc(nil, record, inkeys, formula)
           matched = true
         end
