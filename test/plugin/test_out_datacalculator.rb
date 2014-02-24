@@ -240,4 +240,38 @@ class DataCalculatorOutputTest < Test::Unit::TestCase
       assert_equal counts[pat], r['count']
     end
   end
+
+  def test_flush
+    # retain_key_combinations is true
+    d1 = create_driver(%[
+      unit minute
+      aggregate keys area_id, mission_id
+      formulas sum = amount * price, count = 1
+      retain_key_combinations true
+    ], 'test.input')
+    d1.run do
+      60.times do
+        d1.emit({'area_id' => 1, 'mission_id' => 1, 'amount' => 3, 'price' => 100})
+        d1.emit({'area_id' => 2, 'mission_id' => 1, 'amount' => 3, 'price' => 100})
+      end
+    end
+    assert_equal d1.instance.flush(60).size, 2
+    assert_equal d1.instance.flush(60).size, 2
+
+    # retain_key_combinations is false
+    d2 = create_driver(%[
+      unit minute
+      aggregate keys area_id, mission_id
+      formulas sum = amount * price, count = 1
+      retain_key_combinations false
+    ], 'test.input')
+    d2.run do
+      60.times do
+        d2.emit({'area_id' => 1, 'mission_id' => 1, 'amount' => 3, 'price' => 100})
+        d2.emit({'area_id' => 2, 'mission_id' => 1, 'amount' => 3, 'price' => 100})
+      end
+    end
+    assert_equal d2.instance.flush(60).size, 2
+    assert_equal d2.instance.flush(60).size, 0
+  end
 end
