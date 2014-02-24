@@ -11,6 +11,7 @@ Simple Calculate messages and summarize the calculated results.
 - Use finalizer of summarized results (e.g. average)
 
 'input_tag_remove_prefix' option available if you want to remove tag prefix from output field names.
+'retain_key_combinations' option available if you want to retain key combination created in previous to next interval (default => true).
 
 == Configuration
 

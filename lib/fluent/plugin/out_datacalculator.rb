@@ -10,6 +10,7 @@ class Fluent::DataCalculatorOutput < Fluent::Output
   config_param :input_tag_remove_prefix, :string, :default => nil
   config_param :formulas, :string
   config_param :finalizer, :string, :default => nil
+  config_param :retain_key_combinations, :bool, :default => true
 
   attr_accessor :tick
   attr_accessor :counts
@@ -242,7 +243,11 @@ class Fluent::DataCalculatorOutput < Fluent::Output
   end
 
   def flush(step)
-    flushed, @counts = @counts,count_initialized(@counts.keys.dup)
+    if @retain_key_combinations
+      flushed, @counts = @counts,count_initialized(@counts.keys.dup)
+    else
+      flushed, @counts = @counts,count_initialized
+    end
     generate_output(flushed, step)
   end
 
