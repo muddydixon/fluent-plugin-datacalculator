@@ -1,5 +1,6 @@
-# fluent-plugin-datacalculator
------
+# Fluent::Plugin::Datacalculator, a plugin for [Fluentd](http://fluentd.org/)  [![Build Status](https://travis-ci.org/muddydixon/fluent-plugin-datacalculator.png?branch=master)](https://travis-ci.org/muddydixon/fluent-plugin-datacalculator)
+
+
 
 Simple Calculate messages and summarize the calculated results.
 
