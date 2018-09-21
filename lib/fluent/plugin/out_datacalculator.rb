@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
-class Fluent::DataCalculatorOutput < Fluent::Output
+require 'fluent/plugin/output'
+
+class Fluent::Plugin::DataCalculatorOutput < Fluent::Plugin::Output
   Fluent::Plugin.register_output('datacalculator', self)
+
+  helpers :event_emitter, :timer
 
   config_param :count_interval, :time, :default => nil
   config_param :unit, :string, :default => 'minute'
@@ -145,13 +149,12 @@ class Fluent::DataCalculatorOutput < Fluent::Output
 
   def start
     super
-    start_watch
+    @last_checked = 0
+    timer_execute(:out_datacalculator_timer, @tick, &method(:watch))
   end
 
   def shutdown
     super
-    @watcher.terminate
-    @watcher.join
   end
 
   def count_initialized(keys=nil)
@@ -254,26 +257,14 @@ class Fluent::DataCalculatorOutput < Fluent::Output
   def flush_emit(step)
     data = flush(step)
     data.each do |dat|
-      Fluent::Engine.emit(@tag, Fluent::Engine.now, dat)
+      router.emit(@tag, Fluent::Engine.now, dat)
     end
-  end
-
-  def start_watch
-    # for internal, or tests only
-    @watcher = Thread.new(&method(:watch))
   end
 
   def watch
-    # instance variable, and public accessable, for test
-    @last_checked = Fluent::Engine.now
-    while true
-      sleep 0.5
-      if Fluent::Engine.now - @last_checked >= @tick
-        now = Fluent::Engine.now
-        flush_emit(now - @last_checked)
-        @last_checked = now
-      end
-    end
+    now = Fluent::Engine.now
+    flush_emit(now - @last_checked)
+    @last_checked = now
   end
 
   def checkArgs (obj, inkeys)
@@ -285,16 +276,16 @@ class Fluent::DataCalculatorOutput < Fluent::Output
     return true
   end
 
-  def emit (tag, es, chain)
+  def process (tag, es)
 
     if @aggregate == 'keys'
-      emit_aggregate_keys(tag, es, chain)
+      emit_aggregate_keys(tag, es)
     else
-      emit_single_tag(tag, es, chain)
+      emit_single_tag(tag, es)
     end
   end
 
-  def emit_aggregate_keys (tag, es, chain)
+  def emit_aggregate_keys (tag, es)
     cs = {}
     es.each do |time, record|
       matched = false
@@ -309,7 +300,7 @@ class Fluent::DataCalculatorOutput < Fluent::Output
           matched = true
         end
       else
-        $log.warn index
+        log.warn index
       end
       cs[pat][0] += 1 unless matched
     end
@@ -317,11 +308,9 @@ class Fluent::DataCalculatorOutput < Fluent::Output
     cs.keys.each do |pat|
       countups(pat, cs[pat])
     end
-
-    chain.next
   end
 
-  def emit_single_tag (tag, es, chain)
+  def emit_single_tag (tag, es)
     c = [0] * @_formulas.length
 
     es.each do |time,record|
@@ -333,13 +322,11 @@ class Fluent::DataCalculatorOutput < Fluent::Output
           matched = true
         end
       else
-        $log.warn index
+        log.warn index
       end
       c[0] += 1 unless matched
     end
 
     countups(tag, c)
-
-    chain.next
   end
 end

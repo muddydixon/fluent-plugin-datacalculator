@@ -20,6 +20,7 @@ Gem::Specification.new do |s|
   # specify any dependencies here; for example:
   s.add_development_dependency 'rake'
   s.add_development_dependency 'rdoc'
+  s.add_development_dependency 'test-unit'
   s.add_development_dependency "fluentd"
   s.add_runtime_dependency "fluentd"
 end
