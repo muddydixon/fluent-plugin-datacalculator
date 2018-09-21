@@ -14,8 +14,8 @@ class DataCalculatorOutputTest < Test::Unit::TestCase
     finalizer ave = amounts > 0 ? 1.0 * sum / amounts : 0
   ]
 
-  def create_driver(conf = CONFIG, tag='test.input')
-    Fluent::Test::OutputTestDriver.new(Fluent::DataCalculatorOutput, tag).configure(conf)
+  def create_driver(conf = CONFIG)
+    Fluent::Test::Driver::Output.new(Fluent::Plugin::DataCalculatorOutput).configure(conf)
   end
 
   def test_configure
@@ -139,20 +139,20 @@ class DataCalculatorOutputTest < Test::Unit::TestCase
   end
 
   def test_emit
-    d1 = create_driver(CONFIG, 'test.input')
-    d1.run do
+    d1 = create_driver(CONFIG)
+    d1.run(default_tag: 'test.input1') do
       60.times do
-        d1.emit({'amount' => 3, 'price' => 100})
-        d1.emit({'amount' => 3, 'price' => 200})
-        d1.emit({'amount' => 6, 'price' => 50})
-        d1.emit({'amount' => 10, 'price' => 100})
+        d1.feed({'amount' => 3, 'price' => 100})
+        d1.feed({'amount' => 3, 'price' => 200})
+        d1.feed({'amount' => 6, 'price' => 50})
+        d1.feed({'amount' => 10, 'price' => 100})
       end
+      r1 = d1.instance.flush(60)[0]
+      assert_equal 132000, r1['input1_sum']
+      assert_equal 1320, r1['input1_amounts']
+      assert_equal 240, r1['input1_record']
+      assert_equal 100.0, r1['input1_ave']
     end
-    r1 = d1.instance.flush(60)[0]
-    assert_equal 132000, r1['input_sum']
-    assert_equal 1320, r1['input_amounts']
-    assert_equal 240, r1['input_record']
-    assert_equal 100.0, r1['input_ave']
 
     d2 = create_driver(%[
       unit minute
@@ -160,14 +160,14 @@ class DataCalculatorOutputTest < Test::Unit::TestCase
       input_tag_remove_prefix test
       formulas sum = amount * price, amounts = amount, record = 1
       finalizer ave = amounts > 0 ? 1.0 * sum / amounts : 0
-    ], 'test.input2')
+    ])
 
-    d2.run do
+    d2.run(default_tag: 'test.input2') do
       60.times do
-        d2.emit({'amount' => 3, 'price' => 100})
-        d2.emit({'amount' => 3, 'price' => 200})
-        d2.emit({'amount' => 6, 'price' => 50})
-        d2.emit({'amount' => 10, 'price' => 100})
+        d2.feed({'amount' => 3, 'price' => 100})
+        d2.feed({'amount' => 3, 'price' => 200})
+        d2.feed({'amount' => 6, 'price' => 50})
+        d2.feed({'amount' => 10, 'price' => 100})
       end
     end
     r2 = d2.instance.flush(60)[0]
@@ -183,18 +183,18 @@ class DataCalculatorOutputTest < Test::Unit::TestCase
       <unmatched>
         type stdout
       </unmatched>
-    ], 'test.input3')
-    
+    ])
+
     sums = {}
     counts = {}
-    d3.run do
+    d3.run(default_tag: 'test.input3') do
       240.times do
         area_id = rand(5)
         mission_id = rand(5)
         amount = rand(10)
         price = rand(5) * 100
         pat = [area_id, mission_id].join(',')
-        d3.emit({'amount' => amount, 'price' => price, 'area_id' => area_id, 'mission_id' => mission_id})
+        d3.feed({'amount' => amount, 'price' => price, 'area_id' => area_id, 'mission_id' => mission_id})
         sums[pat] = 0 unless sums.has_key?(pat)
         counts[pat] = 0 unless counts.has_key?(pat)
         sums[pat] += amount * price
@@ -215,18 +215,18 @@ class DataCalculatorOutputTest < Test::Unit::TestCase
       <unmatched>
         type stdout
       </unmatched>
-    ], 'test.input3')
-    
+    ])
+
     sums = {}
     counts = {}
-    d4.run do
+    d4.run(default_tag: 'test.input3') do
       240.times do
         area_id = 'area_'+rand(5).to_s
         mission_id = 'mission_'+rand(5).to_s
         amount = rand(10)
         price = rand(5) * 100
         pat = [area_id, mission_id].join('_$_')
-        d4.emit({'amount' => amount, 'price' => price, 'area_id' => area_id, 'mission_id' => mission_id})
+        d4.feed({'amount' => amount, 'price' => price, 'area_id' => area_id, 'mission_id' => mission_id})
         sums[pat] = 0 unless sums.has_key?(pat)
         counts[pat] = 0 unless counts.has_key?(pat)
         sums[pat] += amount * price
@@ -248,11 +248,11 @@ class DataCalculatorOutputTest < Test::Unit::TestCase
       aggregate keys area_id, mission_id
       formulas sum = amount * price, count = 1
       retain_key_combinations true
-    ], 'test.input')
-    d1.run do
+    ])
+    d1.run(default_tag: 'test.input') do
       60.times do
-        d1.emit({'area_id' => 1, 'mission_id' => 1, 'amount' => 3, 'price' => 100})
-        d1.emit({'area_id' => 2, 'mission_id' => 1, 'amount' => 3, 'price' => 100})
+        d1.feed({'area_id' => 1, 'mission_id' => 1, 'amount' => 3, 'price' => 100})
+        d1.feed({'area_id' => 2, 'mission_id' => 1, 'amount' => 3, 'price' => 100})
       end
     end
     assert_equal d1.instance.flush(60).size, 2
@@ -264,11 +264,11 @@ class DataCalculatorOutputTest < Test::Unit::TestCase
       aggregate keys area_id, mission_id
       formulas sum = amount * price, count = 1
       retain_key_combinations false
-    ], 'test.input')
-    d2.run do
+    ])
+    d2.run(default_tag: 'test.input') do
       60.times do
-        d2.emit({'area_id' => 1, 'mission_id' => 1, 'amount' => 3, 'price' => 100})
-        d2.emit({'area_id' => 2, 'mission_id' => 1, 'amount' => 3, 'price' => 100})
+        d2.feed({'area_id' => 1, 'mission_id' => 1, 'amount' => 3, 'price' => 100})
+        d2.feed({'area_id' => 2, 'mission_id' => 1, 'amount' => 3, 'price' => 100})
       end
     end
     assert_equal d2.instance.flush(60).size, 2
