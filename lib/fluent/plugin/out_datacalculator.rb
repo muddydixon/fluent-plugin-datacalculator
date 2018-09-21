@@ -300,7 +300,7 @@ class Fluent::Plugin::DataCalculatorOutput < Fluent::Plugin::Output
           matched = true
         end
       else
-        $log.warn index
+        log.warn index
       end
       cs[pat][0] += 1 unless matched
     end
@@ -322,7 +322,7 @@ class Fluent::Plugin::DataCalculatorOutput < Fluent::Plugin::Output
           matched = true
         end
       else
-        $log.warn index
+        log.warn index
       end
       c[0] += 1 unless matched
     end
